@@ -30,12 +30,12 @@ const aboutContent =
 const contactContent =
   "Scelerisque eleifend donec pretium vulputate sapien. Rhoncus urna neque viverra justo nec ultrices. Arcu dui vivamus arcu felis bibendum. Consectetur adipiscing elit duis tristique. Risus viverra adipiscing at in tellus integer feugiat. Sapien nec sagittis aliquam malesuada bibendum arcu vitae. Consequat interdum varius sit amet mattis. Iaculis nunc sed augue lacus. Interdum posuere lorem ipsum dolor sit amet consectetur adipiscing elit. Pulvinar elementum integer enim neque. Ultrices gravida dictum fusce ut placerat orci nulla. Mauris in aliquam sem fringilla ut morbi tincidunt. Tortor posuere ac ut consequat semper viverra nam libero.";
 
-const posts = [];
-
 app.get("/", (req, res) => {
-  res.render("home", {
-    homeStartingContent: homeStartingContent,
-    posts: posts,
+  Post.find({}, (err, results) => {
+    res.render("home", {
+      homeStartingContent: homeStartingContent,
+      posts: results,
+    });
   });
 });
 
@@ -52,24 +52,28 @@ app.get("/compose", (req, res) => {
 });
 
 app.post("/compose", (req, res) => {
-  const title = req.body.postTitle;
-  const body = req.body.postBody;
-
-  const newPost = new Post({
-    title: title,
-    body: body,
+  const post = new Post({
+    title: req.body.postTitle,
+    body: req.body.postBody,
   });
-  newPost.save();
 
-  posts.push({ title: title, body: body });
-  res.redirect("/");
+  post.save((err) => {
+    if (!err) {
+      res.redirect("/");
+    }
+  });
 });
 
 app.get("/posts/:title", (req, res) => {
-  posts.forEach((e) => {
-    if (_.lowerCase(req.params.title) === _.lowerCase(e.title)) {
-      res.render("post", { title: e.title, body: e.body });
-    }
+  Post.find({}, (err, results) => {
+    results.forEach((e) => {
+      if (
+        _.lowerCase(req.params.title) === _.lowerCase(e.title) ||
+        _.lowerCase(req.params.title) === _.lowerCase(e._id)
+      ) {
+        res.render("post", { title: e.title, body: e.body });
+      }
+    });
   });
 });
 
